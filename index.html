@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nosso dia 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wine: #2B1420;
+    --wine-deep: #1A0C13;
+    --blush: #F7E7E0;
+    --rose: #C9184A;
+    --gold: #D4AF37;
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'Poppins', sans-serif;
+  }
+
+  *{ box-sizing: border-box; margin:0; padding:0; }
+
+  body{
+    background: var(--wine-deep);
+    color: var(--blush);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===================== TELA DE SENHA (SEGURANÇA DIVERTIDA) ===================== */
+  #password-screen {
+    position: fixed; inset: 0; background: var(--wine-deep); z-index: 10000;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #password-screen.unlocked { opacity: 0; transform: scale(1.1); pointer-events: none; }
+  
+  .pwd-card {
+    background: rgba(43, 20, 32, 0.7); border: 1px solid rgba(212,175,55,0.3);
+    padding: 40px; border-radius: 12px; text-align: center; backdrop-filter: blur(10px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6); max-width: 90%; width: 420px;
+    transition: transform 0.3s ease;
+  }
+  
+  .lock-icon { width: 40px; height: 40px; margin-bottom: 20px; fill: var(--gold); transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+  #password-screen.unlocked .lock-icon { transform: rotateY(180deg) scale(1.3); fill: #4CAF50; }
+  
+  .pwd-card h2 { color: var(--gold); font-family: var(--font-display); font-style: italic; margin-bottom: 8px; font-size: 26px; }
+  .pwd-card p { color: var(--blush); font-size: 14px; margin-bottom: 25px; opacity: 0.85; line-height: 1.5; }
+  
+  .pwd-input-wrap { display: flex; flex-direction: column; gap: 15px; position: relative; }
+  .pwd-input-wrap input {
+    padding: 16px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.5);
+    background: rgba(0,0,0,0.3); color: white; font-family: var(--font-body);
+    text-align: center; outline: none; font-size: 16px; letter-spacing: 1px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .pwd-input-wrap input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
+  .pwd-input-wrap input::placeholder { color: rgba(247,231,224,0.3); }
+  
+  .pwd-input-wrap button {
+    background: var(--rose); color: white; border: none; padding: 16px;
+    border-radius: 8px; cursor: pointer; font-family: var(--font-body); font-weight: 600;
+    transition: background 0.3s, transform 0.2s; font-size: 15px; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .pwd-input-wrap button:hover { background: #e01b54; transform: translateY(-2px); }
+  
+  .pwd-input-wrap.error { animation: pwdShake 0.4s ease; }
+  .pwd-input-wrap.error input { border-color: #ff3333; background: rgba(255, 51, 51, 0.1); }
+  
+  @keyframes pwdShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-12px); }
+    50% { transform: translateX(12px); }
+    75% { transform: translateX(-12px); }
+  }
+  .pwd-feedback { color: #ff3333; font-size: 13px; margin-top: 10px; min-height: 20px; font-weight: 600; }
+
+  /* ===================== TELA DE ENTRADA (SÓ INICIA APÓS SENHA) ===================== */
+  #intro{
+    position: fixed; inset: 0; background: radial-gradient(circle at 50% 40%, var(--wine) 0%, var(--wine-deep) 70%);
+    display:flex; align-items:center; justify-content:center; z-index: 999;
+    opacity: 0; pointer-events: none;
+  }
+  .seven-wrap{ position: relative; text-align:center; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 300px; height: 300px; }
+  .seven{ font-family: var(--font-display); font-size: clamp(120px, 30vw, 220px); font-weight: 700; color: var(--blush); line-height: 1; opacity: 0; transform: scale(0.6) rotate(-8deg); position: relative; z-index: 2; }
+  .heart { position: absolute; background-color: var(--rose); display: inline-block; height: 110px; width: 110px; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg) scale(0); transform-origin: center center; opacity: 0; z-index: 1; }
+  .heart:before, .heart:after { content: ""; background-color: var(--rose); border-radius: 50%; height: 110px; width: 110px; position: absolute; }
+  .heart:before { top: -55px; left: 0; }
+  .heart:after { left: 55px; top: 0; }
+  .intro-sub{ font-family: var(--font-body); font-weight: 300; letter-spacing: 4px; text-transform: uppercase; font-size: 13px; color: var(--gold); opacity: 0; margin-top: 18px; position: relative; z-index: 2; }
+
+  /* Gatilhos das animações liberados via JS */
+  body.unlocked #intro { animation: introFade 3.4s ease forwards; opacity: 1; pointer-events: auto; }
+  body.unlocked .seven { animation: sevenPop 1s cubic-bezier(.2,.9,.3,1.4) 0.3s forwards; }
+  body.unlocked .heart { animation: heartGrow 1s cubic-bezier(.2,.8,.3,1.3) 1.05s forwards; }
+  body.unlocked .intro-sub { animation: subFade 0.8s ease 1.9s forwards; }
+
+  @keyframes sevenPop{ to{ opacity: 1; transform: scale(1) rotate(0deg); } }
+  @keyframes heartGrow{ to{ transform: translate(-50%,-50%) rotate(-45deg) scale(1); opacity: 0.28; } }
+  @keyframes subFade{ to{ opacity: 1; } }
+  @keyframes introFade{ 0%, 72%{ opacity: 1; visibility: visible; } 100%{ opacity: 0; visibility: hidden; pointer-events: none; } }
+
+  /* ===================== CONTEÚDO PRINCIPAL ===================== */
+  main{ max-width: 960px; margin: 0 auto; padding: 60px 24px 100px; opacity: 0; }
+  body.unlocked main { animation: mainReveal 1s ease 3.1s forwards; }
+  @keyframes mainReveal{ to{ opacity: 1; } }
+
+  header.hero{ text-align:center; padding: 40px 0 40px; }
+  .eyebrow{ font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+  h1.title{ font-family: var(--font-display); font-size: clamp(32px, 6vw, 56px); font-weight: 700; line-height: 1.15; }
+  h1.title span{ color: var(--rose); font-style: italic; }
+  .subtitle{ margin-top: 16px; font-weight: 300; color: rgba(247,231,224,0.75); font-size: 15px; }
+
+  /* ===================== CARROSSEL ===================== */
+  .highlight-carousel { position: relative; width: 100%; max-width: 650px; margin: 30px auto 40px; height: 420px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(212,175,55,0.3); box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+  .carousel-track { display: flex; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+  .carousel-slide { min-width: 100%; height: 100%; position: relative; }
+  .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+  .carousel-caption { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(26,12,19,0.95)); padding: 25px 20px 20px; text-align: center; font-size: 15px; font-style: italic; color: var(--blush); font-family: var(--font-display); letter-spacing: 0.5px; }
+  .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(26,12,19,0.6); border: 1px solid rgba(212,175,55,0.4); color: var(--blush); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: background 0.2s, border-color 0.2s, transform 0.2s; z-index: 10; }
+  .carousel-btn:hover { background: var(--wine); border-color: var(--gold); transform: translateY(-50%) scale(1.05); }
+  .carousel-btn.prev { left: 16px; }
+  .carousel-btn.next { right: 16px; }
+
+  /* ===================== CONTADOR ===================== */
+  section.counter{ margin-top: 20px; text-align: center; padding: 36px 20px; border: 1px solid rgba(212,175,55,0.3); border-radius: 6px; background: radial-gradient(ellipse at 50% 0%, rgba(201,24,74,0.12), transparent 70%); }
+  .counter-label{ font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  .counter-number{ font-family: var(--font-display); font-weight: 700; font-size: clamp(48px, 10vw, 84px); color: var(--blush); line-height: 1; }
+  .counter-number span{ color: var(--rose); }
+  .counter-caption{ margin-top: 8px; font-size: 13px; font-weight: 300; color: rgba(247,231,224,0.65); }
+
+  /* ===================== CALENDÁRIO ===================== */
+  section.calendar{ margin-top: 60px; }
+  .section-label{ font-family: var(--font-display); font-style: italic; font-size: 22px; margin-bottom: 24px; text-align:center; color: var(--blush); }
+  .months-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+
+  .month-card{ background: rgba(247,231,224,0.04); border: 1px solid rgba(212,175,55,0.18); border-radius: 4px; padding: 16px; transition: border-color 0.25s ease, transform 0.25s ease; }
+  .month-card:hover{ border-color: rgba(212,175,55,0.45); transform: translateY(-2px); }
+  .month-name{ font-family: var(--font-display); font-size: 16px; color: var(--gold); margin-bottom: 10px; text-align:center; letter-spacing: 1px; text-transform: capitalize; }
+  .month-card.month-album{ cursor: pointer; position: relative; }
+  .month-card.month-album:hover{ border-color: rgba(201,24,74,0.6); box-shadow: 0 0 22px rgba(201,24,74,0.18); }
+  .album-hint{ text-align: center; font-size: 10px; letter-spacing: 1px; color: var(--rose); opacity: 0.85; margin-top: 10px; text-transform: uppercase; font-weight: 600; }
+
+  .weekday-row, .days-grid{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .weekday-row{ margin-bottom: 4px; padding-bottom: 6px; border-bottom: 1px solid rgba(212,175,55,0.15); }
+  .weekday{ font-size: 10px; text-align:center; letter-spacing: 0.5px; color: var(--gold); opacity: 0.75; font-weight: 600; }
+  .day{ font-size: 11px; text-align:center; padding: 6px 0; color: rgba(247,231,224,0.55); border-radius: 3px; }
+  .day.blank{ visibility: hidden; }
+  
+  .day.our-day{ background: var(--rose); color: var(--blush); font-weight: 600; position: relative; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .day.our-day:hover{ transform: scale(1.18); box-shadow: 0 0 14px rgba(201,24,74,0.6); }
+  .day.our-day.pulsed{ animation: dayPulse 0.5s ease; }
+  @keyframes dayPulse{ 0%{ transform: scale(1); } 40%{ transform: scale(1.35); } 100%{ transform: scale(1); } }
+
+  /* Toast de Mensagem */
+  #day-toast{ position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%) translateY(20px); background: var(--wine); border: 1px solid var(--gold); color: var(--blush); padding: 14px 24px; border-radius: 8px; font-size: 14px; font-family: var(--font-body); opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; z-index: 9999; text-align: center; max-width: 90vw; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  #day-toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ===================== ÁLBUM INTERATIVO ===================== */
+  #album-overlay{ position: fixed; inset: 0; background: rgba(10,4,7,0.92); z-index: 850; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 40px 20px; opacity: 0; transition: opacity 0.35s ease; }
+  #album-overlay.open{ display: flex; opacity: 1; }
+  .album-close{ position: absolute; top: 24px; right: 24px; background: none; border: 1px solid rgba(212,175,55,0.4); color: var(--blush); cursor: pointer; border-radius: 50%; width: 44px; height: 44px; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.2s;}
+  .album-close:hover { background: rgba(212,175,55,0.2); }
+  
+  .envelope-wrap{ perspective: 900px; width: 260px; height: 170px; }
+  #album-overlay.reveal .envelope-wrap{ opacity: 0; transform: translateY(-20px) scale(0.85); pointer-events: none; transition: opacity 0.4s ease, transform 0.4s ease; }
+  .envelope{ position: relative; width: 100%; height: 100%; background: linear-gradient(160deg, var(--wine), var(--wine-deep)); border: 1px solid rgba(212,175,55,0.4); border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  .envelope-seal{ position: absolute; left: 50%; top: 62%; transform: translate(-50%,-50%); width: 34px; height: 34px; border-radius: 50%; background: var(--rose); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-style: italic; font-size: 14px; color: var(--blush); z-index: 1; }
+  .envelope-flap{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; clip-path: polygon(0 0, 100% 0, 50% 62%); background: linear-gradient(135deg, var(--rose), var(--wine)); transform-origin: top center; transition: transform 0.75s cubic-bezier(.4,.1,.2,1); z-index: 2; }
+  #album-overlay.flap-open .envelope-flap{ transform: rotateX(-175deg); }
+
+  .album-caption{ font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--gold); margin-top: 20px; text-transform: capitalize; }
+  .photo-grid{ display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 24px; width: 100%; max-width: 720px; max-height: 60vh; overflow-y: auto; opacity: 0; visibility: hidden; }
+  #album-overlay.reveal .photo-grid{ opacity: 1; visibility: visible; }
+  .photo-item{ width: 180px; height: 180px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(212,175,55,0.25); cursor: pointer; }
+  .photo-item img{ width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+  .photo-item:hover img{ transform: scale(1.08); }
+
+  .final-love-msg { width: 100%; text-align: center; font-family: var(--font-display); font-size: 28px; color: var(--rose); margin-top: 30px; font-style: italic; opacity: 0; animation: fadeMsg 1.5s ease 0.5s forwards; }
+  @keyframes fadeMsg { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(10px); } }
+
+  /* ===================== VARAL DE FOTOS (NOVIDADE) ===================== */
+  .clothesline-section {
+    margin-top: 80px;
+    margin-bottom: 20px;
+    padding: 60px 0 20px;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  .clothesline-string {
+    position: absolute;
+    top: -60px;
+    left: -10%;
+    width: 120%;
+    height: 140px;
+    border-bottom: 2px solid rgba(212,175,55,0.3);
+    border-radius: 50%;
+    z-index: 1;
+  }
+  .clothesline-photos {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 20px;
+    position: relative;
+    z-index: 2;
+    padding: 0 10px;
+  }
+  .polaroid {
+    background: #fff;
+    padding: 8px 8px 30px 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border-radius: 3px;
+    width: 140px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
+  }
+  /* O pregador de roupa (feito em CSS) */
+  .polaroid::before {
+    content: ''; position: absolute;
+    top: -12px; left: 50%; transform: translateX(-50%);
+    width: 10px; height: 26px;
+    background: linear-gradient(to bottom, #d4a373, #faedcd);
+    border: 1px solid rgba(139, 90, 43, 0.5);
+    border-radius: 2px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+    z-index: 3;
+  }
+  .polaroid img {
+    width: 100%; height: 130px; object-fit: cover; border: 1px solid #eee;
+  }
+  
+  /* Posições tortinhas naturais do varal */
+  .polaroid:nth-child(1) { transform: translateY(15px) rotate(-6deg); }
+  .polaroid:nth-child(2) { transform: translateY(45px) rotate(4deg); }
+  .polaroid:nth-child(3) { transform: translateY(55px) rotate(-3deg); }
+  .polaroid:nth-child(4) { transform: translateY(35px) rotate(5deg); }
+  .polaroid:nth-child(5) { transform: translateY(10px) rotate(-4deg); }
+
+  /* Interação ao passar o mouse */
+  .polaroid:hover { transform: scale(1.15) rotate(0deg) translateY(-15px) !important; z-index: 10; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
+
+  @media(max-width: 768px) {
+    .polaroid { width: 100px; padding: 6px 6px 20px 6px; }
+    .polaroid img { height: 90px; }
+    .clothesline-string { top: -20px; height: 90px; }
+  }
+
+  /* ===================== O SEGREDO DO 7 (MODAL IMERSIVO) ===================== */
+  .secret-trigger-wrap { text-align: center; margin-top: 80px; }
+  .secret-trigger { background: transparent; border: 1px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-style: italic; font-size: 18px; padding: 14px 32px; border-radius: 30px; cursor: pointer; transition: all 0.3s ease; letter-spacing: 1px; }
+  .secret-trigger:hover { background: rgba(212,175,55,0.15); box-shadow: 0 0 20px rgba(212,175,55,0.3); transform: translateY(-2px); }
+
+  #secret-modal { position: fixed; inset: 0; background: radial-gradient(circle at center, #1A0C13 0%, #0a0407 100%); z-index: 1000; display: none; overflow-y: auto; padding: 60px 24px; opacity: 0; transition: opacity 0.6s ease; }
+  #secret-modal.open { display: block; opacity: 1; }
+  .secret-container { max-width: 680px; margin: 0 auto; padding-bottom: 80px; position: relative; z-index: 2; }
+  
+  .secret-stars { position: fixed; inset: 0; background-image: radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)), radial-gradient(2px 2px at 40px 70px, #ffffff, rgba(0,0,0,0)), radial-gradient(2px 2px at 50px 160px, #ffffff, rgba(0,0,0,0)), radial-gradient(2px 2px at 90px 40px, #ffffff, rgba(0,0,0,0)), radial-gradient(2px 2px at 130px 80px, #ffffff, rgba(0,0,0,0)); background-repeat: repeat; background-size: 200px 200px; opacity: 0.15; z-index: 1; pointer-events: none; }
+
+  .secret-header { text-align: center; margin-bottom: 50px; }
+  .secret-header h2 { font-family: var(--font-display); font-size: 36px; color: var(--gold); margin-bottom: 16px; font-style: italic; }
+  .secret-header p { font-size: 15px; color: var(--blush); font-weight: 300; line-height: 1.6; }
+
+  .secret-block { background: rgba(247,231,224,0.03); border-left: 2px solid var(--rose); padding: 24px; margin-bottom: 24px; border-radius: 0 8px 8px 0; opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .secret-block.visible { opacity: 1; transform: translateY(0); }
+  .secret-block h3 { font-family: var(--font-display); font-size: 20px; color: var(--gold); margin-bottom: 12px; }
+  .secret-block p { font-size: 14px; color: rgba(247,231,224,0.85); line-height: 1.7; margin-bottom: 10px; font-weight: 300; }
+  .secret-block p:last-child { margin-bottom: 0; }
+
+  .secret-conclusion { text-align: center; margin-top: 50px; font-family: var(--font-display); font-size: 22px; color: var(--rose); font-style: italic; line-height: 1.5; padding: 30px; border: 1px dashed rgba(201,24,74,0.4); border-radius: 8px; }
+
+  /* Botão de Música do Spotify */
+  .music-btn-wrap { text-align: center; margin-top: 40px; }
+  .music-btn { display: inline-flex; align-items: center; gap: 10px; background: #1DB954; color: white; text-decoration: none; padding: 14px 28px; border-radius: 30px; font-family: var(--font-body); font-weight: 600; font-size: 14px; transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4); }
+  .music-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(29, 185, 84, 0.6); }
+
+  /* ===================== LIGHTBOX ===================== */
+  #lightbox{ position: fixed; inset: 0; background: rgba(10,4,7,0.96); display: none; align-items: center; justify-content: center; z-index: 1100; padding: 40px; }
+  #lightbox.open{ display: flex; }
+  #lightbox img{ max-width: 90vw; max-height: 80vh; border-radius: 6px; border: 1px solid rgba(212,175,55,0.3); }
+  .lightbox-close, .lightbox-nav{ position: absolute; background: none; border: 1px solid rgba(212,175,55,0.4); color: var(--blush); cursor: pointer; border-radius: 50%; width: 44px; height: 44px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .lightbox-close:hover, .lightbox-nav:hover{ background: var(--wine); }
+  .lightbox-close{ top: 20px; right: 20px; }
+  .lightbox-nav.prev{ left: 20px; top: 50%; transform: translateY(-50%); }
+  .lightbox-nav.next{ right: 20px; top: 50%; transform: translateY(-50%); }
+
+  footer{ text-align:center; margin-top: 40px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: rgba(212,175,55,0.5); }
+</style>
+</head>
+<body>
+
+  <!-- ===================== TELA DE SENHA DE ACESSO ===================== -->
+  <div id="password-screen">
+    <div class="pwd-card">
+      <!-- Ícone de cadeado em SVG -->
+      <svg class="lock-icon" viewBox="0 0 24 24">
+        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+      </svg>
+      <h2>Acesso Restrito</h2>
+      <p>Dica de Segurança: Quem é que sempre manda (e tem razão) no relacionamento?</p>
+      
+      <div class="pwd-input-wrap" id="pwd-wrap">
+        <input type="password" id="input-pwd" placeholder="Digite a senha secreta..." autocomplete="off">
+        <button id="btn-pwd">Desbloquear Nosso Mundo</button>
+        <div class="pwd-feedback" id="pwd-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ANIMAÇÃO DE ENTRADA ===================== -->
+  <div id="intro">
+    <div class="seven-wrap">
+      <div class="heart"></div>
+      <div class="seven">7</div>
+      <div class="intro-sub">o nosso dia</div>
+    </div>
+  </div>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">desde o nosso primeiro dia 7</div>
+      <h1 class="title">Vinícius <span>&amp;</span> Yasmin</h1>
+      <p class="subtitle">Todo mês, no dia 7, a gente comemora um pouquinho mais de nós.</p>
+    </header>
+
+    <div class="highlight-carousel">
+      <button class="carousel-btn prev">&#10094;</button>
+      <div class="carousel-track">
+        <div class="carousel-slide">
+          <img src="foto_destaque1.jpg" alt="Destaque 1">
+          <div class="carousel-caption">Os melhores sorrisos são aqueles que dou contigo.</div>
+        </div>
+        <div class="carousel-slide">
+          <img src="foto_destaque2.jpg" alt="Destaque 2">
+          <div class="carousel-caption">Cada detalhe da nossa jornada vale a pena.</div>
+        </div>
+      </div>
+      <button class="carousel-btn next">&#10095;</button>
+    </div>
+
+    <section class="counter">
+      <div class="counter-label">namorando há</div>
+      <div class="counter-number" id="dias-juntos">0<span>.</span></div>
+      <div class="counter-caption">dias — e contando</div>
+    </section>
+
+    <section class="calendar">
+      <p class="section-label">nossos dias 7 em 2026</p>
+      <div class="months-grid" id="months-grid"></div>
+    </section>
+
+    <!-- ===================== VARAL DE FOTOS (NOVIDADE) ===================== -->
+    <section class="clothesline-section">
+      <div class="clothesline-string"></div>
+      <div class="clothesline-photos">
+        <!-- Substitua as fotos varal1.jpg etc pelas imagens que quiser pendurar -->
+        <div class="polaroid" onclick="abrirLightboxVaral(0)"><img src="varal1.jpg" alt="Polaroid"></div>
+        <div class="polaroid" onclick="abrirLightboxVaral(1)"><img src="varal2.jpg" alt="Polaroid"></div>
+        <div class="polaroid" onclick="abrirLightboxVaral(2)"><img src="varal3.jpg" alt="Polaroid"></div>
+        <div class="polaroid" onclick="abrirLightboxVaral(3)"><img src="varal4.jpg" alt="Polaroid"></div>
+        <div class="polaroid" onclick="abrirLightboxVaral(4)"><img src="varal5.jpg" alt="Polaroid"></div>
+      </div>
+    </section>
+
+    <!-- O BOTÃO MISTERIOSO -->
+    <div class="secret-trigger-wrap">
+      <button class="secret-trigger" id="btn-secret">O Segredo do Número 7 ✧</button>
+    </div>
+
+    <footer>feito com carinho, um dia 7 de cada vez</footer>
+  </main>
+
+  <!-- MODAL DO SEGREDO DO 7 -->
+  <div id="secret-modal">
+    <div class="secret-stars"></div>
+    <button class="album-close" id="close-secret">&times;</button>
+    <div class="secret-container">
+      
+      <div class="secret-header">
+        <h2>O Dia 7</h2>
+        <p>O dia 7 realmente não é uma data qualquer. Em quase todas as culturas, religiões e filosofias da história da humanidade, o 7 não é apenas um número — ele é o símbolo da perfeição, da totalidade e do destino.</p>
+      </div>
+
+      <div class="secret-block">
+        <h3>A Perfeição Absoluta</h3>
+        <p>Na numerologia antiga, o número 7 é a soma de dois universos: O <strong>3</strong>, que representa o divino, o espiritual e o céu. E o <strong>4</strong>, que representa a terra, a matéria, os quatro pontos cardeais e a estabilidade.</p>
+        <p>Quando começamos a namorar no dia 7, é como se o universo estivesse dizendo que o nosso amor une o melhor dos dois mundos; a paixão mágica e espiritual (o 3) com a base sólida, real e segura da terra (o 4). É o equilíbrio perfeito.</p>
+      </div>
+
+      <div class="secret-block">
+        <h3>O Ciclo do Tempo e a Eternidade</h3>
+        <p>O 7 rege o ritmo do nosso mundo. São 7 os dias da semana, as fases da lua duram 7 dias e existem 7 notas musicais. O nosso amor não é uma coincidência passageira; ele entrou no ritmo natural da vida.</p>
+        <p>Assim como as notas musicais criam uma sinfonia perfeita e os dias completam uma semana, nós dois completamos um ciclo. Nosso amor tem o tempo a seu favor.</p>
+      </div>
+
+      <div class="secret-block">
+        <h3>A Lenda Japonesa do Tanabata</h3>
+        <p>Na tradição oriental, existe um festival lindo chamado Tanabata Matsuri (O Festival das Estrelas), celebrado exatamente no dia 7 do mês 7.</p>
+        <p>A lenda conta a história de duas estrelas apaixonadas (Orihime e Hikoboshi) que foram separadas pela Via Láctea e só têm a permissão de se encontrar uma única vez por ano, justamente no dia 7. É o dia em que os desejos de amor se tornam realidade e cruzam o céu. O nosso dia carrega essa energia do encontro celestial que estava escrito para acontecer.</p>
+      </div>
+
+      <div class="secret-block">
+        <h3>No Misticismo e na Espiritualidade</h3>
+        <p><strong>Na tradição judaico-cristã:</strong> Deus descansou no 7º dia, tornando-o sagrado. Nosso namoro começou sob o número da "obra concluída".</p>
+        <p><strong>No Oriente:</strong> São 7 os chakras, os centros de energia do corpo. Quando todos os 7 estão alinhados, a pessoa atinge a iluminação e a paz plena. Estar com a pessoa certa no dia 7 é ter o coração e a alma em perfeito alinhamento.</p>
+      </div>
+
+      <div class="secret-block">
+        <h3>O Arco-Íris</h3>
+        <p>O arco-íris tem exatamente 7 cores. Ele é o símbolo universal da promessa, da esperança e da beleza que surge depois de um período difícil.</p>
+        <p>O número 7 em nossas vidas é um lembrete de que, não importa o que aconteça no mundo lá fora, nossa união traz cor, luz e calmaria.</p>
+      </div>
+
+      <div class="secret-block">
+        <h3>A Essência Única</h3>
+        <p>Na matemática, ele é um número primo — ou seja, ele não pode ser dividido por nenhum outro número além de si mesmo e do 1.</p>
+      </div>
+
+      <div class="secret-conclusion">
+        "Que o nosso amor seja exatamente como o número 7: indivisível, único, perfeito em sua essência e protegido por toda a história do universo."
+      </div>
+
+      <div class="music-btn-wrap">
+        <!-- O SEU LINK DO SPOTIFY ESTÁ AQUI -->
+        <a href="https://open.spotify.com/track/6Z9G7ThTI9RCNAAsBW4MAy?si=bpBL_CyVQ92gDQiJSv4_ew&utm_source=copy-link" target="_blank" class="music-btn">
+          <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 14.5c-.2.32-.63.43-.95.23-2.6-1.59-5.88-1.95-9.73-1.07-.36.08-.73-.14-.81-.5-.08-.36.14-.73.5-.81 4.22-.96 7.84-.55 10.76 1.24.32.2.43.63.23.95zm1.36-3.04c-.25.4-.77.53-1.17.28-3.05-1.87-7.7-2.43-11.16-1.33-.45.14-.93-.11-1.07-.56-.14-.45.11-.93.56-1.07 3.97-1.26 9.1-.63 12.56 1.5.4.25.53.77.28 1.18zm.1-3.17C14.37 8.13 8.33 7.93 4.86 8.98c-.54.16-1.1-.15-1.26-.69-.16-.54.15-1.1.69-1.26 3.98-1.2 10.66-1 14.92 1.53.48.29.64.92.35 1.4-.29.48-.92.64-1.4.35z"/></svg>
+          Tocar Nossa Música
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ÁLBUM INTERATIVO MENSAL -->
+  <div id="album-overlay">
+    <button class="album-close" id="close-album">&times;</button>
+    <div class="envelope-wrap">
+      <div class="envelope">
+        <div class="envelope-seal" id="envelope-letter">M</div>
+        <div class="envelope-flap"></div>
+      </div>
+    </div>
+    <p class="album-caption" id="album-title">mês — nossos momentos</p>
+    <div class="photo-grid" id="photo-grid"></div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div id="lightbox">
+    <button class="lightbox-close">&times;</button>
+    <button class="lightbox-nav prev">&#10094;</button>
+    <img id="lightbox-img" src="" alt="">
+    <button class="lightbox-nav next">&#10095;</button>
+  </div>
+
+  <div id="day-toast"></div>
+
+<script>
+  /* ============ SISTEMA DE SENHA ENGRAÇADA ============ */
+  const pwdBtn = document.getElementById('btn-pwd');
+  const pwdInput = document.getElementById('input-pwd');
+  const pwdScreen = document.getElementById('password-screen');
+  const pwdFeedback = document.getElementById('pwd-feedback');
+  const pwdWrap = document.getElementById('pwd-wrap');
+
+  function attemptUnlock() {
+    // Transforma tudo em minúsculo e tira espaços sobrando
+    const val = pwdInput.value.toLowerCase().trim();
+    
+    // A SENHA CORRETA: yasmin
+    if(val === 'yasmin') {
+      pwdFeedback.style.color = '#4CAF50';
+      pwdFeedback.textContent = 'Acesso liberado, patroa! 🔓';
+      pwdScreen.classList.add('unlocked');
+      
+      // Inicia a mágica depois de 800ms
+      setTimeout(() => {
+        pwdScreen.style.display = 'none';
+        document.body.classList.add('unlocked');
+      }, 800);
+    } 
+    // SE ELE TENTAR COLOCAR O NOME DELE 😂
+    else if (val === 'vinicius' || val === 'vinícius' || val === 'eu') {
+      pwdWrap.classList.add('error');
+      pwdFeedback.style.color = '#ff4444';
+      pwdFeedback.textContent = 'Hahaha incorreto! Não minta pra si mesmo 😂';
+      setTimeout(() => pwdWrap.classList.remove('error'), 400);
+    } 
+    // QUALQUER OUTRA COISA
+    else {
+      pwdWrap.classList.add('error');
+      pwdFeedback.style.color = '#ff4444';
+      pwdFeedback.textContent = 'Senha incorreta! Pense bem na resposta...';
+      setTimeout(() => pwdWrap.classList.remove('error'), 400);
+    }
+  }
+
+  pwdBtn.addEventListener('click', attemptUnlock);
+  pwdInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') attemptUnlock(); });
+
+
+  /* ============ DADOS DAS FOTOS ============ */
+  const fotosPorMes = {
+    2: ["foto_marco.jpg"],
+    3: ["foto_abril.jpg"],
+    4: ["foto_maio.jpg"],
+    5: ["foto_junho.jpg"],
+    6: ["foto_julho.jpg"] 
+  };
+
+  /* ============ GERADOR DE CALENDÁRIO ============ */
+  const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const diasSemana = ["D","S","T","Q","Q","S","S"];
+  const ano = 2026;
+  const grid = document.getElementById('months-grid');
+
+  meses.forEach((nomeMes, mesIndex) => {
+    const primeiroDiaSemana = new Date(ano, mesIndex, 1).getDay();
+    const totalDias = new Date(ano, mesIndex + 1, 0).getDate();
+    const card = document.createElement('div');
+    card.className = 'month-card';
+
+    if(mesIndex >= 2 && mesIndex <= 6){
+      card.classList.add('month-album');
+      const hint = document.createElement('div');
+      hint.className = 'album-hint';
+      hint.textContent = '✦ toque para ver a foto';
+      card.appendChild(hint);
+      card.addEventListener('click', () => abrirAlbum(mesIndex, nomeMes));
+    } 
+    else if (mesIndex >= 7) {
+      card.classList.add('month-album');
+      const hint = document.createElement('div');
+      hint.className = 'album-hint';
+      hint.textContent = '✦ futuro...';
+      card.appendChild(hint);
+      card.addEventListener('click', () => mostrarToast('Uma página em branco, esperando para ser preenchida com a nossa história. 📸'));
+    }
+
+    const titulo = document.createElement('div');
+    titulo.className = 'month-name';
+    titulo.textContent = nomeMes;
+    card.insertBefore(titulo, card.firstChild);
+
+    const weekdayRow = document.createElement('div');
+    weekdayRow.className = 'weekday-row';
+    diasSemana.forEach(letra => {
+      const w = document.createElement('div');
+      w.className = 'weekday'; w.textContent = letra;
+      weekdayRow.appendChild(w);
+    });
+    card.appendChild(weekdayRow);
+
+    const diasGrid = document.createElement('div');
+    diasGrid.className = 'days-grid';
+
+    for(let i=0; i<primeiroDiaSemana; i++){
+      const blank = document.createElement('div');
+      blank.className = 'day blank';
+      diasGrid.appendChild(blank);
+    }
+
+    for(let d=1; d<=totalDias; d++){
+      const isOurDay = (d === 7 && mesIndex >= 2);
+      const dia = document.createElement('div');
+      dia.className = 'day' + (isOurDay ? ' our-day' : '');
+      dia.textContent = d;
+      
+      if(isOurDay){
+        dia.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dia.classList.remove('pulsed');
+          void dia.offsetWidth;
+          dia.classList.add('pulsed');
+          mostrarToast(`Nosso dia 7 de ${nomeMes}!`);
+        });
+      }
+      diasGrid.appendChild(dia);
+    }
+
+    card.appendChild(diasGrid);
+    grid.appendChild(card);
+  });
+
+  function mostrarToast(texto){
+    const toast = document.getElementById('day-toast');
+    toast.textContent = texto;
+    toast.classList.add('show');
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  /* ============ CONTADOR DINÂMICO ============ */
+  const dataInicio = new Date(2026, 2, 7); 
+  function atualizarContador(){
+    const agora = new Date();
+    const diffMs = agora - dataInicio;
+    const dias = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+    document.getElementById('dias-juntos').innerHTML = dias + '<span>.</span>';
+  }
+  atualizarContador();
+
+  /* ============ CARROSSEL ============ */
+  const track = document.querySelector('.carousel-track');
+  const slides = Array.from(document.querySelectorAll('.carousel-slide'));
+  const prevBtn = document.querySelector('.carousel-btn.prev');
+  const nextBtn = document.querySelector('.carousel-btn.next');
+  let currentSlideIndex = 0;
+
+  function moveToSlide(index) {
+    if (index < 0) index = slides.length - 1;
+    if (index >= slides.length) index = 0;
+    currentSlideIndex = index;
+    track.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+  }
+  prevBtn.addEventListener('click', () => moveToSlide(currentSlideIndex - 1));
+  nextBtn.addEventListener('click', () => moveToSlide(currentSlideIndex + 1));
+  setInterval(() => moveToSlide(currentSlideIndex + 1), 4000);
+
+  /* ============ ÁLBUM INTERATIVO ============ */
+  const albumOverlay = document.getElementById('album-overlay');
+  const photoGrid = document.getElementById('photo-grid');
+  const albumTitle = document.getElementById('album-title');
+  const envelopeLetter = document.getElementById('envelope-letter');
+  let albumTimeouts = [];
+  let currentAlbumPhotos = [];
+
+  function abrirAlbum(mesIndex, nomeMes){
+    albumTimeouts.forEach(clearTimeout);
+    albumTitle.textContent = `${nomeMes} — nossa foto`;
+    envelopeLetter.textContent = nomeMes.charAt(0).toUpperCase();
+    photoGrid.innerHTML = '';
+    currentAlbumPhotos = fotosPorMes[mesIndex] || [];
+
+    currentAlbumPhotos.forEach((srcImg, idx) => {
+      let div = document.createElement('div');
+      div.className = 'photo-item';
+      div.innerHTML = `<img src="${srcImg}" alt="Foto de ${nomeMes}">`;
+      div.addEventListener('click', () => abrirLightbox(idx, 'album'));
+      photoGrid.appendChild(div);
+    });
+
+    if(mesIndex === 2){
+      let msgFinal = document.createElement('div');
+      msgFinal.className = 'final-love-msg';
+      msgFinal.textContent = 'te amo meu amor';
+      photoGrid.appendChild(msgFinal);
+    }
+
+    albumOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    albumTimeouts.push(setTimeout(() => albumOverlay.classList.add('flap-open'), 350));
+    albumTimeouts.push(setTimeout(() => albumOverlay.classList.add('reveal'), 1150));
+  }
+
+  function fecharAlbum(){
+    albumTimeouts.forEach(clearTimeout);
+    albumOverlay.classList.remove('open', 'flap-open', 'reveal');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('close-album').addEventListener('click', fecharAlbum);
+
+  /* ============ LIGHTBOX (FOTOS E VARAL) ============ */
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  let fotoAtualIndex = 0;
+  let contextoLightbox = []; // Guarda a lista de fotos aberta (álbum ou varal)
+
+  function abrirLightbox(index, contexto){
+    fotoAtualIndex = index;
+    if(contexto === 'album') {
+      contextoLightbox = currentAlbumPhotos;
+    } else {
+      // Pega as imagens do varal
+      contextoLightbox = Array.from(document.querySelectorAll('.polaroid img')).map(img => img.src);
+    }
+    
+    lightboxImg.src = contextoLightbox[fotoAtualIndex];
+    lightbox.classList.add('open');
+  }
+
+  function abrirLightboxVaral(index) {
+    abrirLightbox(index, 'varal');
+  }
+
+  function fecharLightbox(){ lightbox.classList.remove('open'); }
+  function proximaFoto(delta){
+    if(contextoLightbox.length <= 1) return;
+    fotoAtualIndex = (fotoAtualIndex + delta + contextoLightbox.length) % contextoLightbox.length;
+    lightboxImg.src = contextoLightbox[fotoAtualIndex];
+  }
+  
+  document.querySelector('.lightbox-close').addEventListener('click', fecharLightbox);
+  document.querySelector('.lightbox-nav.prev').addEventListener('click', () => proximaFoto(-1));
+  document.querySelector('.lightbox-nav.next').addEventListener('click', () => proximaFoto(1));
+
+  /* ============ MODAL DO SEGREDO DO 7 ============ */
+  const btnSecret = document.getElementById('btn-secret');
+  const modalSecret = document.getElementById('secret-modal');
+  const closeSecret = document.getElementById('close-secret');
+  const secretBlocks = document.querySelectorAll('.secret-block');
+
+  btnSecret.addEventListener('click', () => {
+    modalSecret.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    
+    secretBlocks.forEach((block, index) => {
+      setTimeout(() => { block.classList.add('visible'); }, 300 + (index * 400));
+    });
+  });
+
+  closeSecret.addEventListener('click', () => {
+    modalSecret.classList.remove('open');
+    document.body.style.overflow = '';
+    secretBlocks.forEach(block => block.classList.remove('visible'));
+  });
+
+</script>
+</body>
+</html>
